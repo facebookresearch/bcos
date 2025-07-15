@@ -1,6 +1,6 @@
 # BCOS
 
-A stochastic approximation method (optimizer) with Block-Coordinate Optimal Stepsizes ([paper on arXiv]()).
+A stochastic approximation method (optimizer) with Block-Coordinate Optimal Stepsizes ([paper on arXiv](https://arxiv.org/abs/2507.08963)).
 
 ## Installation
 

@@ -7,10 +7,10 @@ import torch
 from torch.optim import Optimizer
 
 class BCOS(Optimizer):
-    def __init__(self, params, lr, beta=0.9, eps=1e-6, 
+    def __init__(self, params, lr, beta=0.9, beta2=None, eps=1e-6, 
                  weight_decay=0.1, mode='c', decouple_wd=True): 
 
-        defaults = dict(lr=lr, beta=beta, eps=eps, wd=weight_decay) 
+        defaults = dict(lr=lr, beta=beta, beta2=beta2, eps=eps, wd=weight_decay) 
         super().__init__(params, defaults)
 
         if mode not in ['g', 'm', 'c']:
@@ -23,6 +23,7 @@ class BCOS(Optimizer):
         for group in self.param_groups:
             lr = group["lr"]
             beta = group["beta"]
+            beta2 = group["beta2"]
             eps = group["eps"]
             wd = group["wd"]
 
@@ -48,9 +49,9 @@ class BCOS(Optimizer):
                 if self.mode in ['m', 'c']:
                     m = state['m']
                     if self.mode == 'c':    # conditional estimator
-                        beta_v = 1 - (1 - beta)**2
+                        betav = 1 - (1 - beta)**2 if beta2 is None else beta2
                         g2 = g.detach().square()
-                        v = beta_v * m.square() + (1 - beta_v) * g2
+                        v = betav * m.square() + (1 - betav) * g2
                     # update momentum
                     m.mul_(beta).add_(g.detach(), alpha=1 - beta) 
                     d = m
@@ -59,7 +60,8 @@ class BCOS(Optimizer):
                 
                 if self.mode in ['g', 'm']:     # EMA estimator
                     v = state['v']
-                    v.mul_(beta).add_(d.square(), alpha=1 - beta)
+                    betav = beta if beta2 is None else beta2
+                    v.mul_(betav).add_(d.square(), alpha=1 - betav)
 
                 # BCOS update: p := p - lr * (d / (sqrt(v) + eps))
                 p.data.add_(d.div(v.sqrt() + eps), alpha= - lr)

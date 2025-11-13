@@ -8,7 +8,7 @@ from torch.optim import Optimizer
 
 class BCOS(Optimizer):
     def __init__(self, params, lr, beta=0.9, beta2=None, eps=1e-6, 
-                 weight_decay=0.1, mode='c', decouple_wd=True): 
+                 weight_decay=0.1, mode='c', decouple_wd=True, simple_cond=False): 
 
         defaults = dict(lr=lr, beta=beta, beta2=beta2, eps=eps, wd=weight_decay) 
         super().__init__(params, defaults)
@@ -17,6 +17,7 @@ class BCOS(Optimizer):
             raise ValueError(f"BCOS mode {mode} not supported")
         self.mode = mode
         self.decouple_wd = decouple_wd      # True for BCOSW
+        self.simple_cond = simple_cond # True for simple alternative v estimator in 'c' mode
 
     def step(self, closure = None):
 
@@ -49,9 +50,14 @@ class BCOS(Optimizer):
                 if self.mode in ['m', 'c']:
                     m = state['m']
                     if self.mode == 'c':    # conditional estimator
-                        betav = 1 - (1 - beta)**2 if beta2 is None else beta2
-                        g2 = g.detach().square()
-                        v = betav * m.square() + (1 - betav) * g2
+                        if not self.simple_cond:
+                            # BCOS-c
+                            v = (3 * beta**2 - 2 * beta**3) * m.square() + (1 - beta)**2 * g.detach().square() + 2 * beta * (1-beta)**2 * m * g.detach()
+                        else:
+                            # simple alternative:
+                            betav = 1 - (1 - beta)**2 if beta2 is None else beta2
+                            g2 = g.detach().square()
+                            v = betav * m.square() + (1 - betav) * g2
                     # update momentum
                     m.mul_(beta).add_(g.detach(), alpha=1 - beta) 
                     d = m

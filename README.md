@@ -12,7 +12,7 @@ Follow the [PyTorch optimizer instructions](https://docs.pytorch.org/docs/stable
 
 ```
 optimizer = BCOS(params, lr=0.001, beta=0.9, eps=1e-6, weight_decay=0.1, 
-                 mode='c', decouple_wd=True)
+                 mode='c', decouple_wd=True, simple_cond=False)
 ```
 
 ### Parameters
@@ -27,8 +27,8 @@ optimizer = BCOS(params, lr=0.001, beta=0.9, eps=1e-6, weight_decay=0.1,
     * 'm': use momentum as search direction and EMA estimator for its 2nd moment (using same beta).
     * 'c': use momentum as search direction and conditional estimator for its 2nd moment.
 * **decouple\_wd** (*bool, optional*): whether or not use [decoupled weight decay regularization](https://arxiv.org/abs/1711.05101) (*default: True*).
-
+* **simple\_cond** (*bool, optional*): whether or not use [simple alternative](https://arxiv.org/abs/1711.05101) in BCOS-c variant (*default: False*)/
 
 ## License
 
-PARQ is MIT licensed, as found in the LICENSE file.
+BCOS is MIT licensed, as found in the LICENSE file.
